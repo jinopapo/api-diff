@@ -7,6 +7,10 @@ graph TD
     CAct[actions]
     CSvc[services]
     CRepo[repositorys]
+    subgraph CStore[store]
+      CStoreApp[app]
+      CStorePages[pages]
+    end
   end
 
   subgraph Server[server]
@@ -16,8 +20,11 @@ graph TD
 
   %% 許可される導線（明示ルール）
   App --> CComp
+  App --> SSvc
   CComp --> CAct
   CAct --> CSvc
   CSvc --> CRepo
+  CAct --> CStoreApp
+  CAct --> CStorePages
   SSvc --> SRepo
 ```
