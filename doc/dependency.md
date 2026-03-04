@@ -19,4 +19,5 @@ graph TD
   CComp --> CAct
   CAct --> CSvc
   CSvc --> CRepo
+  SSvc --> SRepo
 ```

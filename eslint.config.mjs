@@ -225,7 +225,7 @@ const architecturePlugin = {
         type: "problem",
         docs: {
           description:
-            "client/components/actions/services/repositorys の呼び出し元レイヤーを制限する",
+            "client/components/actions/services/repositorys と server/repository の呼び出し元レイヤーを制限する",
         },
         schema: [],
       },
@@ -256,6 +256,12 @@ const architecturePlugin = {
             allowedImporterDirs: [clientServicesDir],
             message:
               "client/repositorys は client/services からのみ参照できます。",
+          },
+          {
+            targetDir: serverRepositoryDir,
+            allowedImporterDirs: [serverServiceDir],
+            message:
+              "server/repository は server/service からのみ参照できます。",
           },
         ];
 
