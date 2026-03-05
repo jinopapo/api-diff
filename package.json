@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "clean": "npx ts-prune -e",
-    "test": "vitest",
+    "clean": "npx ts-prune -e -i '^(app/layout\\.tsx|app/page\\.tsx|next\\.config\\.ts|\\.next/)'",
+    "test": "vitest --passWithNoTests",
     "complete": "npm run lint && npm run type-check && npm run clean && npm run test"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

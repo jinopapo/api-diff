@@ -650,7 +650,7 @@ const eslintConfig = defineConfig([
       architecture: architecturePlugin,
     },
     rules: {
-      "max-lines": ["error", { max: 500 }],
+      "max-lines": ["error", { max: 300 }],
       "architecture/no-app-imports": "error",
       "architecture/no-same-layer-dependency": "error",
       "architecture/no-client-server-cross-dependency": "error",
