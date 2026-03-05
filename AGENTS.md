@@ -52,3 +52,6 @@
 - 配下は1階層でページ毎に分けます
   - 例）client/store/pages/agentなど
   - app配下のページ名と一致します
+
+# コーディングルール
+./eslint.config.mjsを参照

@@ -4,6 +4,7 @@ graph TD
 
   subgraph Client[client]
     CComp[components]
+    CParts[parts]
     CAct[actions]
     CSvc[services]
     CRepo[repositorys]
@@ -21,6 +22,8 @@ graph TD
   %% 許可される導線（明示ルール）
   App --> CComp
   App --> SSvc
+  CComp --> CParts
+  CParts --> CParts
   CComp --> CAct
   CAct --> CSvc
   CSvc --> CRepo

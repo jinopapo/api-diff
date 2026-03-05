@@ -12,6 +12,7 @@ const serverDir = path.join(projectRoot, "server");
 const clientActionsDir = path.join(clientDir, "actions");
 const clientServicesDir = path.join(clientDir, "services");
 const clientRepositorysDir = path.join(clientDir, "repositorys");
+const clientPartsDir = path.join(clientDir, "parts");
 const clientStoreDir = path.join(clientDir, "store");
 const clientStoreAppDir = path.join(clientStoreDir, "app");
 const clientStorePagesDir = path.join(clientStoreDir, "pages");
@@ -253,6 +254,12 @@ const architecturePlugin = {
               "client/components は app 配下からのみ参照できます。",
           },
           {
+            targetDir: clientPartsDir,
+            allowedImporterDirs: [clientComponentsDir, clientPartsDir],
+            message:
+              "client/parts は client/components または client/parts からのみ参照できます。",
+          },
+          {
             targetDir: clientActionsDir,
             allowedImporterDirs: [clientComponentsDir],
             message:
@@ -389,7 +396,14 @@ const architecturePlugin = {
             if (!topLevelDirectoryViolations) {
               const clientUnexpectedDirectories = getUnexpectedDirectories(
                 clientDir,
-                ["components", "actions", "services", "repositorys", "store"],
+                [
+                  "components",
+                  "parts",
+                  "actions",
+                  "services",
+                  "repositorys",
+                  "store",
+                ],
               );
               const serverUnexpectedDirectories = getUnexpectedDirectories(
                 serverDir,
@@ -585,6 +599,45 @@ const architecturePlugin = {
         return createImportVisitors(checkImport);
       },
     },
+
+    "parts-only-parts-dependency": {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "client/parts 配下からは client/parts 配下への依存のみ許可する",
+        },
+        schema: [],
+      },
+      create(context) {
+        const filename = context.filename;
+
+        if (!isInside(clientPartsDir, filename)) {
+          return {};
+        }
+
+        const checkImport = (node, importSource) => {
+          if (typeof importSource !== "string") {
+            return;
+          }
+
+          const resolvedPath = resolveImportPath(importSource, filename);
+          if (!resolvedPath) {
+            return;
+          }
+
+          if (!isInside(clientPartsDir, resolvedPath)) {
+            context.report({
+              node,
+              message:
+                "client/parts 配下からは client/parts 配下のみ参照できます。",
+            });
+          }
+        };
+
+        return createImportVisitors(checkImport);
+      },
+    },
   },
 };
 
@@ -607,6 +660,7 @@ const eslintConfig = defineConfig([
       "architecture/layer-file-naming": "error",
       "architecture/store-pages-action-page-boundary": "error",
       "architecture/actions-components-component-boundary": "error",
+      "architecture/parts-only-parts-dependency": "error",
     },
   },
   {
