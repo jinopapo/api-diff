@@ -1,0 +1,10 @@
+model: gpt-5.2
+reviews:
+  - name: file-principal-review
+    description: プログラミングの汎用的な原則に従ってるかレビュー
+    model: ""
+    parallel: false
+  - name: comment-review
+    description: コメントのレビュー
+    model: ""
+    parallel: false
