@@ -1,6 +1,14 @@
 #　アプリ概要
 2つの環境で動作するapiのデグレチェックをするツールです
 
+# 技術スタック
+- next.js
+- typescript
+- eslint
+- vitest
+- zustand
+- tailwindcss
+
 # ディレクトリ構成
 ## app
 - アプリのエントリーポイントです
@@ -61,3 +69,6 @@
 
 # コーディングルール
 ./eslint.config.mjsを参照
+
+# uｔ
+- 必要あれば実装と同じ階層にhogehoge.spec.tsという名前でテストコードを置いてください

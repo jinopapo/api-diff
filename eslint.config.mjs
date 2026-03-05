@@ -669,6 +669,21 @@ const eslintConfig = defineConfig([
       "max-lines": "off",
     },
   },
+  {
+    files: ["**/*.spec.{ts,tsx}"],
+    rules: {
+      "architecture/no-app-imports": "off",
+      "architecture/no-same-layer-dependency": "off",
+      "architecture/no-client-server-cross-dependency": "off",
+      "architecture/restricted-client-layer-callers": "off",
+      "architecture/no-client-store-app-pages-cross-dependency": "off",
+      "architecture/allowed-top-level-directories": "off",
+      "architecture/layer-file-naming": "off",
+      "architecture/store-pages-action-page-boundary": "off",
+      "architecture/actions-components-component-boundary": "off",
+      "architecture/parts-only-parts-dependency": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
