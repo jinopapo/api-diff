@@ -6,11 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "clean": "npx ts-prune -e -i '^(app/layout\\.tsx|app/page\\.tsx|next\\.config\\.ts|\\.next/)'",
     "test": "vitest --passWithNoTests",
-    "complete": "npm run lint && npm run type-check && npm run clean && npm run test"
+    "complete": "npm run format && npm run lint && npm run type-check && npm run clean && npm run test"
   },
   "dependencies": {
     "next": "16.1.6",
@@ -25,6 +27,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"

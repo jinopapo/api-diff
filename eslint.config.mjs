@@ -3,6 +3,7 @@ import path from "node:path";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 const projectRoot = process.cwd();
 
@@ -143,7 +144,7 @@ const architecturePlugin = {
         type: "problem",
         docs: {
           description:
-            "client/actions|services|repositorys|store/app|store/pages, server/service|repository で同レイヤー依存を禁止する",
+            "client/components|actions|services|repositorys|store/app|store/pages, server/service|repository で同レイヤー依存を禁止する",
         },
         schema: [],
       },
@@ -151,6 +152,7 @@ const architecturePlugin = {
         const filename = context.filename;
 
         const layers = [
+          { dir: clientComponentsDir, label: "client/components" },
           { dir: clientActionsDir, label: "client/actions" },
           { dir: clientServicesDir, label: "client/services" },
           { dir: clientRepositorysDir, label: "client/repositorys" },
@@ -160,7 +162,9 @@ const architecturePlugin = {
           { dir: serverRepositoryDir, label: "server/repository" },
         ];
 
-        const currentLayer = layers.find((layer) => isInside(layer.dir, filename));
+        const currentLayer = layers.find((layer) =>
+          isInside(layer.dir, filename),
+        );
         if (!currentLayer) {
           return {};
         }
@@ -250,8 +254,7 @@ const architecturePlugin = {
           {
             targetDir: clientComponentsDir,
             allowedImporterDirs: [appDir],
-            message:
-              "client/components は app 配下からのみ参照できます。",
+            message: "client/components は app 配下からのみ参照できます。",
           },
           {
             targetDir: clientPartsDir,
@@ -268,8 +271,7 @@ const architecturePlugin = {
           {
             targetDir: clientServicesDir,
             allowedImporterDirs: [clientActionsDir],
-            message:
-              "client/services は client/actions からのみ参照できます。",
+            message: "client/services は client/actions からのみ参照できます。",
           },
           {
             targetDir: clientRepositorysDir,
@@ -280,13 +282,13 @@ const architecturePlugin = {
           {
             targetDir: clientStoreDir,
             allowedImporterDirs: [clientActionsDir],
-            message: "client/store 配下は client/actions からのみ参照できます。",
+            message:
+              "client/store 配下は client/actions からのみ参照できます。",
           },
           {
             targetDir: serverServiceDir,
             allowedImporterDirs: [appDir],
-            message:
-              "server/service は app 配下からのみ参照できます。",
+            message: "server/service は app 配下からのみ参照できます。",
           },
           {
             targetDir: serverRepositoryDir,
@@ -451,7 +453,11 @@ const architecturePlugin = {
 
         const namingRules = [
           { dir: clientActionsDir, suffix: "Action", label: "client/actions" },
-          { dir: clientServicesDir, suffix: "Service", label: "client/services" },
+          {
+            dir: clientServicesDir,
+            suffix: "Service",
+            label: "client/services",
+          },
           {
             dir: clientRepositorysDir,
             suffix: "Repository",
@@ -465,7 +471,9 @@ const architecturePlugin = {
           },
         ];
 
-        const targetRule = namingRules.find((rule) => isInside(rule.dir, filename));
+        const targetRule = namingRules.find((rule) =>
+          isInside(rule.dir, filename),
+        );
         if (!targetRule) {
           return {};
         }
@@ -505,7 +513,10 @@ const architecturePlugin = {
           return {};
         }
 
-        const importerSegments = getRelativePathSegments(clientActionsDir, filename);
+        const importerSegments = getRelativePathSegments(
+          clientActionsDir,
+          filename,
+        );
         const importerPage = importerSegments[0];
 
         const checkImport = (node, importSource) => {
@@ -557,7 +568,10 @@ const architecturePlugin = {
           return {};
         }
 
-        const importerSegments = getRelativePathSegments(clientComponentsDir, filename);
+        const importerSegments = getRelativePathSegments(
+          clientComponentsDir,
+          filename,
+        );
         const importerPage = importerSegments[0];
         const importerComponent = importerSegments[1];
 
@@ -571,7 +585,10 @@ const architecturePlugin = {
             return;
           }
 
-          const targetSegments = getRelativePathSegments(clientActionsDir, resolvedPath);
+          const targetSegments = getRelativePathSegments(
+            clientActionsDir,
+            resolvedPath,
+          );
           const targetPage = targetSegments[0];
           const targetComponent = targetSegments[1];
 
@@ -684,6 +701,7 @@ const eslintConfig = defineConfig([
       "architecture/parts-only-parts-dependency": "off",
     },
   },
+  eslintConfigPrettier,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
