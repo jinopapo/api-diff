@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>API Diff — Env A vs Env B</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111a33; --panel2:#0f1730;
+      --text:#e8eeff; --muted:#a9b6dd; --border:#24305a;
+      --accent:#6ea8ff; --ok:#3ddc97; --warn:#ffd166; --bad:#ff5c7a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#070b17,#0b1020 30%);color:var(--text);font-family:var(--sans)}
+    header{padding:16px 18px;border-bottom:1px solid var(--border);background:rgba(15,23,48,.7);backdrop-filter: blur(10px);position:sticky;top:0;z-index:10}
+    h1{margin:0;font-size:15px}
+    main{max-width:1200px;margin:0 auto;padding:16px 18px}
+
+    .card{border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,rgba(17,26,51,.95), rgba(15,23,48,.95));overflow:hidden}
+    .head{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:rgba(15,23,48,.55)}
+    .head h2{margin:0;font-size:13px}
+    .pill{font-size:11px;color:var(--muted);border:1px solid var(--border);padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.03)}
+    .body{padding:12px}
+
+    .grid{display:grid;grid-template-columns: 1fr;gap:12px}
+    .form{display:grid;grid-template-columns: 1fr 1fr;gap:10px}
+    .form .full{grid-column:1 / -1}
+
+    label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}
+    input[type="text"]{
+      width:100%;border-radius:12px;border:1px solid var(--border);
+      background:rgba(7,11,23,.65);color:var(--text);
+      padding:10px;font-size:12px;outline:none
+    }
+    input[type="text"]:focus{border-color:rgba(110,168,255,.7);box-shadow:0 0 0 3px rgba(110,168,255,.15)}
+
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);padding:9px 12px;border-radius:12px;font-size:12px;cursor:pointer}
+    .btn.primary{border-color:rgba(110,168,255,.7);background:rgba(110,168,255,.18)}
+    .btn.danger{border-color:rgba(255,92,122,.55);background:rgba(255,92,122,.12)}
+
+    .status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--border);background:rgba(15,23,48,.55)}
+    .badge{font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted)}
+    .badge.ok{border-color:rgba(61,220,151,.55);background:rgba(61,220,151,.12);color:var(--ok)}
+    .badge.bad{border-color:rgba(255,92,122,.55);background:rgba(255,92,122,.12);color:var(--bad)}
+    .badge.warn{border-color:rgba(255,209,102,.55);background:rgba(255,209,102,.12);color:var(--warn)}
+
+    .kpis{display:flex;gap:8px;flex-wrap:wrap}
+    .kpi{font-family:var(--mono);font-size:12px;border:1px solid var(--border);border-radius:999px;padding:4px 10px;background:rgba(255,255,255,.03)}
+    .kpi .n{font-weight:700}
+
+    .muted{color:var(--muted)}
+
+    /* dynamic rows */
+    .kvBlock{border:1px solid var(--border);border-radius:14px;background:rgba(7,11,23,.35);overflow:hidden}
+    .kvHead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(36,48,90,.6)}
+    .kvTitle{font-size:12px;color:var(--text)}
+    .kvBody{padding:10px 12px}
+    .kvRow{display:grid;grid-template-columns: 1fr 1.2fr auto;gap:8px;align-items:center;margin-bottom:8px}
+    .kvRow:last-child{margin-bottom:0}
+    .kvFooter{display:flex;gap:8px;margin-top:10px}
+
+    /* ===== compact diff table (Field | A | B) ===== */
+    .diffTable{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:rgba(7,11,23,.45)}
+    .diffRow{display:grid;grid-template-columns: 260px 1fr 1fr;border-top:1px solid rgba(36,48,90,.6)}
+    .diffRow:first-child{border-top:none}
+    .diffHeadCell{padding:8px 10px;font-size:11px;color:var(--muted);background:rgba(255,255,255,.03);border-right:1px solid rgba(36,48,90,.6)}
+    .diffHeadCell:last-child{border-right:none}
+
+    .diffCell{padding:8px 10px;border-right:1px solid rgba(36,48,90,.6)}
+    .diffCell:last-child{border-right:none}
+
+    .fieldName{font-family:var(--mono);font-size:12px;color:var(--accent);word-break:break-word}
+
+    .val{
+      margin:0;
+      font-family:var(--mono);
+      font-size:12px;
+      line-height:1.45;
+      white-space:pre;
+      overflow:auto;
+      max-height:160px;
+    }
+    .valA{color:var(--bad)}
+    .valB{color:var(--ok)}
+    .valEmpty{color:var(--muted)}
+
+    /* url row uses same table */
+    .urlLabel{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+    @media (max-width: 980px){
+      .diffRow{grid-template-columns: 200px 1fr 1fr}
+    }
+    @media (max-width: 760px){
+      .form{grid-template-columns:1fr}
+      .diffRow{grid-template-columns: 1fr;}
+      .diffHeadCell,.diffCell{border-right:none}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>API Diff — Env A vs Env B</h1>
+</header>
+
+<main>
+  <div class="grid">
+
+    <section class="card">
+      <div class="head"><h2>Request</h2></div>
+      <div class="body">
+        <div class="form">
+          <div>
+            <label>Env A Base URL</label>
+            <input id="baseA" type="text" value="https://stg.api.example.com">
+          </div>
+          <div>
+            <label>Env B Base URL</label>
+            <input id="baseB" type="text" value="https://prd.api.example.com">
+          </div>
+          <div class="full">
+            <label>Path template</label>
+            <input id="pathTpl" type="text" value="/v1/users/{userId}">
+          </div>
+
+          <div class="full"><div class="kvBlock"><div class="kvHead"><div class="kvTitle">Path params</div></div><div class="kvBody" id="pathParams"></div><div class="kvBody"><div class="kvFooter"><button id="ppAdd" class="btn" type="button">+ Add row</button></div></div></div></div>
+          <div class="full"><div class="kvBlock"><div class="kvHead"><div class="kvTitle">Query params</div></div><div class="kvBody" id="queryParams"></div><div class="kvBody"><div class="kvFooter"><button id="qpAdd" class="btn" type="button">+ Add row</button></div></div></div></div>
+          <div class="full"><div class="kvBlock"><div class="kvHead"><div class="kvTitle">Headers</div></div><div class="kvBody" id="headersParams"></div><div class="kvBody"><div class="kvFooter"><button id="hpAdd" class="btn" type="button">+ Add row</button></div></div></div></div>
+          <div class="full"><div class="kvBlock"><div class="kvHead"><div class="kvTitle">Ignore paths</div></div><div class="kvBody" id="ignoreParams"></div><div class="kvBody"><div class="kvFooter"><button id="igAdd" class="btn" type="button">+ Add row</button></div></div></div></div>
+
+          <div class="full row" style="justify-content:space-between;">
+            <button id="run" class="btn primary" type="button">Run & Compare</button>
+            <span id="reqInfo" class="muted" style="font-size:11px"></span>
+          </div>
+        </div>
+      </div>
+      <div class="status">
+        <span id="resultBadge" class="badge">idle</span>
+        <div class="kpis">
+          <span class="kpi">Added: <span class="n" id="kAdd">0</span></span>
+          <span class="kpi">Removed: <span class="n" id="kDel">0</span></span>
+          <span class="kpi">Changed: <span class="n" id="kChg">0</span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head"><h2>Diff</h2><span class="pill" id="diffCount">0 diffs</span></div>
+      <div class="body">
+        <div class="diffTable" id="diffTable"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function typeOf(v){ if(v===null)return'null'; if(Array.isArray(v))return'array'; return typeof v; }
+function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+function kvRow(){
+  const d=document.createElement('div');
+  d.className='kvRow';
+  d.innerHTML='<input class="k" type="text" placeholder="key"><input class="v" type="text" placeholder="value"><button class="btn danger rm" type="button">Remove</button>';
+  d.querySelector('.rm').onclick=()=>d.remove();
+  return d;
+}
+function singleRow(){
+  const d=document.createElement('div');
+  d.className='kvRow';
+  d.style.gridTemplateColumns='1fr auto';
+  d.innerHTML='<input class="v" type="text" placeholder="$.path.to.ignore"><button class="btn danger rm" type="button">Remove</button>';
+  d.querySelector('.rm').onclick=()=>d.remove();
+  return d;
+}
+
+function getKvRows(c){
+  return [...c.querySelectorAll('.kvRow')].map(r=>({k:r.querySelector('.k')?.value.trim()||'',v:r.querySelector('.v')?.value.trim()||''}));
+}
+function getSingleRows(c){
+  return [...c.querySelectorAll('.kvRow')].map(r=>r.querySelector('.v')?.value.trim()||'').filter(Boolean);
+}
+
+function applyPathParams(tpl,rows){
+  let p=tpl;
+  for(const {k,v} of rows){
+    if(!k)continue;
+    const enc=encodeURIComponent(v);
+    p=p.replaceAll(`{${k}}`,enc).replaceAll(`:${k}`,enc);
+  }
+  return p;
+}
+function buildQuery(rows){
+  const u=new URLSearchParams();
+  rows.forEach(({k,v})=>{ if(k)u.set(k,v); });
+  return u.toString();
+}
+function joinUrl(b,p,q){
+  b=b.replace(/\/+$/,'');
+  if(!p.startsWith('/'))p='/'+p;
+  return q?`${b}${p}?${q}`:`${b}${p}`;
+}
+
+function diffJson(a,b,path='$',out=[]){
+  if(typeOf(a)!==typeOf(b)){
+    out.push({kind:'chg',path,a,b});
+    return out;
+  }
+  if(typeOf(a)==='object'){
+    const ak=Object.keys(a), bk=Object.keys(b);
+    ak.forEach(k=>{ if(!(k in b)) out.push({kind:'del',path:`${path}.${k}`,a:a[k],b:undefined}); });
+    bk.forEach(k=>{ if(!(k in a)) out.push({kind:'add',path:`${path}.${k}`,a:undefined,b:b[k]}); else diffJson(a[k],b[k],`${path}.${k}`,out); });
+    return out;
+  }
+  if(typeOf(a)==='array'){
+    const m=Math.max(a.length,b.length);
+    for(let i=0;i<m;i++){
+      if(i>=a.length) out.push({kind:'add',path:`${path}[${i}]`,a:undefined,b:b[i]});
+      else if(i>=b.length) out.push({kind:'del',path:`${path}[${i}]`,a:a[i],b:undefined});
+      else diffJson(a[i],b[i],`${path}[${i}]`,out);
+    }
+    return out;
+  }
+  if(a!==b) out.push({kind:'chg',path,a,b});
+  return out;
+}
+
+function valueStr(v){
+  if(v===undefined) return '';
+  if(typeof v==='string') return JSON.stringify(v);
+  if(typeof v==='object') return JSON.stringify(v,null,2);
+  return String(v);
+}
+
+function renderTable({urlA,urlB,diffs}){
+  const el=$('diffTable');
+  el.innerHTML='';
+
+  // header row: put URLs into Env A / Env B header cells
+  el.insertAdjacentHTML('beforeend',
+    '<div class="diffRow">'+
+      '<div class="diffHeadCell">Field</div>'+
+      '<div class="diffHeadCell"><div class="muted" style="margin-bottom:4px;">Env A</div><div class="urlLine">'+escapeHtml(urlA)+'</div></div>'+
+      '<div class="diffHeadCell"><div class="muted" style="margin-bottom:4px;">Env B</div><div class="urlLine">'+escapeHtml(urlB)+'</div></div>'+
+    '</div>'
+  );
+
+  if(!diffs.length){
+    el.insertAdjacentHTML('beforeend',
+      '<div class="diffRow">'+
+        '<div class="diffCell"><div class="fieldName">$</div></div>'+
+        '<div class="diffCell"><pre class="val valEmpty">(no diffs)</pre></div>'+
+        '<div class="diffCell"><pre class="val valEmpty">(no diffs)</pre></div>'+
+      '</div>'
+    );
+    return;
+  }
+
+  for(const d of diffs){
+    const left = (d.kind==='add') ? '' : valueStr(d.a);
+    const right = (d.kind==='del') ? '' : valueStr(d.b);
+
+    const leftClass = (d.kind==='add') ? 'val valEmpty' : 'val valA';
+    const rightClass = (d.kind==='del') ? 'val valEmpty' : 'val valB';
+
+    el.insertAdjacentHTML('beforeend',
+      '<div class="diffRow">'+
+        '<div class="diffCell"><div class="fieldName">'+escapeHtml(d.path)+'</div></div>'+
+        '<div class="diffCell"><pre class="'+leftClass+'">'+escapeHtml(left || '(empty)')+'</pre></div>'+
+        '<div class="diffCell"><pre class="'+rightClass+'">'+escapeHtml(right || '(empty)')+'</pre></div>'+
+      '</div>'
+    );
+  }
+}
+
+function setBadge(kind, text){
+  const b = $('resultBadge');
+  b.className = 'badge' + (kind ? ` ${kind}` : '');
+  b.textContent = text;
+}
+function updateKpi(diffs){
+  $('kAdd').textContent = diffs.filter(x=>x.kind==='add').length;
+  $('kDel').textContent = diffs.filter(x=>x.kind==='del').length;
+  $('kChg').textContent = diffs.filter(x=>x.kind==='chg').length;
+  $('diffCount').textContent = diffs.length + ' diffs';
+  setBadge(diffs.length ? 'bad' : 'ok', diffs.length ? 'mismatch' : 'match');
+}
+
+$('ppAdd').onclick=()=>$('pathParams').appendChild(kvRow());
+$('qpAdd').onclick=()=>$('queryParams').appendChild(kvRow());
+$('hpAdd').onclick=()=>$('headersParams').appendChild(kvRow());
+$('igAdd').onclick=()=>$('ignoreParams').appendChild(singleRow());
+
+$('run').onclick=()=>{
+  const baseA=$('baseA').value.trim();
+  const baseB=$('baseB').value.trim();
+  const pathTpl=$('pathTpl').value.trim();
+  const path=applyPathParams(pathTpl,getKvRows($('pathParams')));
+  const query=buildQuery(getKvRows($('queryParams')));
+  const urlA=joinUrl(baseA,path,query);
+  const urlB=joinUrl(baseB,path,query);
+  $('reqInfo').textContent = path + (query ? ('?' + query) : '');
+
+  // mock
+  const a={user:{id:1,name:'Taro'},meta:{v:1}};
+  const b={user:{id:1,name:'Jiro'},meta:{v:1},extra:true};
+  const diffs=diffJson(a,b);
+
+  renderTable({urlA,urlB,diffs});
+  updateKpi(diffs);
+};
+
+// tests
+(function(){
+  const d=diffJson({a:1},{a:2});
+  console.assert(d.length===1 && d[0].kind==='chg','basic diff test');
+  const e=diffJson({a:1},{ });
+  console.assert(e.some(x=>x.kind==='del'&&x.path==='$.a'),'delete test');
+})();
+</script>
+</body>
+</html>
