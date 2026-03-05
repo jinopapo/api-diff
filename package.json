@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "type-check": "tsc --noEmit",
+    "clean": "npx ts-prune -e",
+    "test": "vitest",
+    "complete": "npm run lint && npm run type-check && npm run clean && npm run test"
   },
   "dependencies": {
     "next": "16.1.6",
