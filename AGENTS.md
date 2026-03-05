@@ -24,8 +24,14 @@
 
 ### client/components
 - クライアント側のページ構成するuiのコンポーネントが入ります
+- parts配下の純粋な見た目のコンポーネントを組み合わせて、ロジックを持ったコンポーネントを実装します
 - 配下は2階層で1階層目はページ名、2階層目はコンポーネント名毎に分けます
 - 例）client/components/agent/AgentList, client/components/compare/CompareResultなど
+
+### client/parts
+- client/componentsの中でさらに細かいパーツに分けたいものを入れます
+- ロジックを持ってはならず純粋な見た目のみのreactコンポーネントを入れることを想定しています
+- 配下は自由に構成してもらって大丈夫です
 
 ### client/actions
 - componentsの振る舞いの実装が入ります
